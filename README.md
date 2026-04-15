@@ -1,59 +1,132 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+## About Bumpa Loyalty Backend
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+This is the backend API for the Bumpa Loyalty Program built with Laravel 12. The application provides an event-driven loyalty system where users earn achievements based on purchase count, unlock badges at achievement thresholds, and receive cashback via a mock Paystack payment gateway.
 
-## About Laravel
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Features
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- Event-driven achievement and badge system
+- Mock Paystack payment gateway for cashback disbursement
+- RESTful API with Sanctum token authentication
+- Admin endpoints with role-based access control
+- Comprehensive test coverage (unit + feature)
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
 
-## Learning Laravel
+## Tech Stack
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+- PHP 8.2, Laravel 12, Sanctum
+- MySQL 8.4, Redis 7
+- Docker (MySQL, Redis, PHP webserver, queue worker)
+- PHPUnit
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
 
-## Laravel Sponsors
+## Installation
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+The application is wrapped with a docker container. Ensure docker-compose/docker is installed and running on system before running the command. To install docker visit `https://docs.docker.com/desktop/`.
 
-### Premium Partners
+Clone the repo
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+    git clone https://github.com/GeneraalAladeen/bumpa-backend.git
 
-## Contributing
+Switch to repo folder
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+    cd bumpa-backend
 
-## Code of Conduct
+Install PHP dependencies
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+    docker-compose run --rm base_php composer install
 
-## Security Vulnerabilities
+Copy the environment file
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+    cp .env.example .env
 
-## License
+Generate encryption key
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+    docker-compose run --rm base_php php artisan key:generate
+
+Start the database
+
+    docker-compose up -d database_server
+
+Run migrations and seed the database
+
+    docker-compose run --rm base_php php artisan migrate --seed
+
+Start the application
+
+    docker-compose up -d
+
+The API will be served on `http://localhost:8002`.
+
+
+## API Endpoints
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| POST | /api/register | No | Register a new user |
+| POST | /api/login | No | Login and get token |
+| GET | /api/user | Sanctum | Get authenticated user |
+| GET | /api/users/{user}/achievements | Sanctum | Get user's loyalty progress |
+| POST | /api/purchases | Sanctum | Simulate a purchase |
+| GET | /api/admin/users/achievements | Sanctum + Admin | List all users' loyalty data |
+
+
+## Architecture
+
+### Event Flow
+
+```
+PurchaseCompleted event
+  → CheckAchievementsListener (queued)
+      → AchievementUnlocked event
+          → CheckBadgesListener (queued)
+              → BadgeUnlocked event
+  → ProcessCashbackListener (queued)
+      → MockPaystackGateway → CashbackTransaction
+```
+
+### Database Models
+
+- **User** — has achievements (many-to-many), badges (many-to-many), orders, cashback transactions
+- **Order** — belongs to user, has order reference, total amount, status
+- **Achievement** — purchase count thresholds with cashback percentages
+- **Badge** — achievement count thresholds
+- **CashbackTransaction** — payment records with provider references and status
+
+
+## Seeded Data
+
+### Achievements
+| Name | Purchases Required | Cashback % |
+|------|--------------------|------------|
+| First Purchase | 1 | 1% |
+| 5 Purchases | 5 | 2% |
+| 10 Purchases | 10 | 3% |
+| 25 Purchases | 25 | 5% |
+| 50 Purchases | 50 | 7% |
+
+### Badges
+| Name | Achievements Required |
+|------|-----------------------|
+| Beginner | 1 |
+| Intermediate | 2 |
+| Advanced | 3 |
+| Master | 5 |
+
+### Seeded Users
+| Email | Password | Role |
+|-------|----------|------|
+| admin@bumpa.com | password | Admin |
+| john@example.com | password | User |
+| jane@example.com | password | User |
+
+
+## Testing
+
+Run all tests
+
+    docker-compose run --rm base_php php artisan test
+
+Or locally with SQLite
+
+    php artisan test
