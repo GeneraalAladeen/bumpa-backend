@@ -5,7 +5,7 @@ namespace App\Listeners;
 use App\Events\PurchaseCompleted;
 use App\Models\CashbackTransaction;
 use App\Services\LoyaltyService;
-use App\Services\PaymentGateway\PaymentGatewayInterface;
+use App\Contracts\PaymentGatewayInterface;
 use Illuminate\Contracts\Queue\ShouldQueue;
 
 class ProcessCashbackListener implements ShouldQueue

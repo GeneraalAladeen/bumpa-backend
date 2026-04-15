@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'payment_gateway' => [
+        'provider' => env('PAYMENT_GATEWAY_PROVIDER', 'paystack'),
+        'success_rate' => env('PAYMENT_GATEWAY_SUCCESS_RATE', 80),
+    ],
+
 ];
