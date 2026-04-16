@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Events\PurchaseCompleted;
 use App\Http\Requests\StorePurchaseRequest;
+use App\Http\Resources\OrderResource;
 use App\Models\Order;
 use App\Models\User;
 use App\Services\LoyaltyService;
@@ -44,7 +45,7 @@ class LoyaltyController extends Controller
 
         return response()->json([
             'message' => 'Purchase recorded successfully.',
-            'order' => $order,
+            'order' => new OrderResource($order),
         ], 201);
     }
 }

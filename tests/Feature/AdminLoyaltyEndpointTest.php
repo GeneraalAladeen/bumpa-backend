@@ -31,7 +31,7 @@ class AdminLoyaltyEndpointTest extends TestCase
         $response->assertOk()
             ->assertJsonStructure([
                 'data' => [
-                    '*' => ['user_id', 'name', 'email', 'total_purchases', 'achievements_count', 'current_badge'],
+                    '*' => ['id', 'name', 'email', 'is_admin', 'total_purchases', 'achievements_count', 'current_badge', 'created_at'],
                 ],
             ]);
     }
