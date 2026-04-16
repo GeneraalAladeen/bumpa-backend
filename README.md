@@ -121,6 +121,18 @@ PurchaseCompleted event
 | jane@example.com | password | User |
 
 
+## Design Choices
+
+### Simple Pagination
+The admin users endpoint uses `simplePaginate` instead of `paginate`. Standard pagination runs a `COUNT(*)` query on every request to calculate the total number of records and last page — this gets expensive as the users table grows. Since the admin panel only needs Previous/Next navigation, `simplePaginate` skips the count query entirely and just checks if there's a next page, making it significantly faster at scale.
+
+### Queued Event Listeners
+All listeners (`CheckAchievementsListener`, `CheckBadgesListener`, `ProcessCashbackListener`) implement `ShouldQueue` so the purchase API response returns immediately without waiting for achievement checks or cashback processing. This keeps the API fast, but it means the frontend won't see achievement unlocks instantly — they appear once the queue worker processes the jobs (typically a few seconds).
+
+### Cashback Simulation
+The `MockPaystackGateway` simulates a real payment provider with an 80% success rate (configurable via `PAYMENT_GATEWAY_SUCCESS_RATE` in `.env`). Failed cashback disbursements are recorded with a `failure_reason` so they can be retried or investigated. In production, this would be swapped for a real Paystack integration by implementing the `PaymentGatewayInterface` contract — no controller or listener code would need to change since the gateway is resolved from the service container.
+
+
 ## Testing
 
 Run all tests
