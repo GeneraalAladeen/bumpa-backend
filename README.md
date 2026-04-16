@@ -34,8 +34,8 @@ parent-folder/
 
 Clone both repos
 
-    git clone https://github.com/GeneraalAladeen/bumpa-backend.git
-    git clone <bumpa-frontend-repo-url>
+    git clone git@github.com:GeneraalAladeen/bumpa-backend.git
+    git clone git@github.com:GeneraalAladeen/bumpa-frontend.git
 
 Switch to the backend folder
 
