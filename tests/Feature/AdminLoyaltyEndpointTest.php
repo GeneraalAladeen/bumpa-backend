@@ -78,6 +78,6 @@ class AdminLoyaltyEndpointTest extends TestCase
 
         $response->assertOk()
             ->assertJsonCount(5, 'data')
-            ->assertJsonPath('meta.per_page', 5);
+            ->assertJsonPath('meta.per_page', fn ($v) => $v == 5);
     }
 }

@@ -17,7 +17,7 @@ class AdminLoyaltyController extends Controller
         $users = User::with('badges')
             ->withCount(['achievements', 'orders'])
             ->when($request->search, fn ($q, $search) => $q->where('name', 'like', "%{$search}%")->orWhere('email', 'like', "%{$search}%"))
-            ->paginate($request->input('per_page', 15));
+            ->simplePaginate($request->input('per_page', 15));
 
         return UserResource::collection($users);
     }
