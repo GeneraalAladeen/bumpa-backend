@@ -16,19 +16,28 @@ This is the backend API for the Bumpa Loyalty Program built with Laravel 12. The
 
 - PHP 8.2, Laravel 12, Sanctum
 - MySQL 8.4, Redis 7
-- Docker (MySQL, Redis, PHP webserver, queue worker)
+- Docker (MySQL, Redis, PHP webserver, queue worker, frontend)
 - PHPUnit
 
 
 ## Installation
 
-The application is wrapped with a docker container. Ensure docker-compose/docker is installed and running on system before running the command. To install docker visit `https://docs.docker.com/desktop/`.
+The application is wrapped with a docker container that also includes the frontend service. Ensure docker-compose/docker is installed and running on system before running the command. To install docker visit `https://docs.docker.com/desktop/`.
 
-Clone the repo
+**Important:** Both `bumpa-backend` and `bumpa-frontend` repos must be cloned as sibling directories (same parent folder) for the unified Docker setup to work:
+
+```
+parent-folder/
+  bumpa-backend/
+  bumpa-frontend/
+```
+
+Clone both repos
 
     git clone https://github.com/GeneraalAladeen/bumpa-backend.git
+    git clone <bumpa-frontend-repo-url>
 
-Switch to repo folder
+Switch to the backend folder
 
     cd bumpa-backend
 
@@ -52,11 +61,16 @@ Run migrations and seed the database
 
     docker-compose run --rm base_php php artisan migrate --seed
 
-Start the application
+Start all services (backend API, queue worker, database, Redis, frontend)
 
     docker-compose up -d
 
-The API will be served on `http://localhost:8002`.
+This starts five services:
+- **database_server** — MySQL 8.4 on port 3309
+- **redis** — Redis 7
+- **webserver** — Laravel API on `http://localhost:8002`
+- **queue** — Queue worker for processing achievements and cashback
+- **frontend** — React app on `http://localhost:5173`
 
 
 ## API Endpoints
